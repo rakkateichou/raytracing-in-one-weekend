@@ -1,6 +1,8 @@
 use std::io::Write;
 
-pub type Color = [f64; 3];
+use crate::vec3::Vec3;
+
+pub type Color = Vec3;
 
 pub fn write_color(file: &mut std::fs::File, color: Color) -> std::io::Result<()> {
     let ir = (255.999 * color[0]) as i32;
