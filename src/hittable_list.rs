@@ -15,8 +15,8 @@ impl Default for HittableList {
 }
 
 impl HittableList {
-    pub fn add(&mut self, object: Box<dyn Hittable>) {
-        self.objects.push(object);
+    pub fn add<T: Hittable + 'static>(&mut self, object: T) { // assuming we never deallocate
+        self.objects.push(Box::new(object));
     }
 }
 

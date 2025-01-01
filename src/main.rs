@@ -34,8 +34,8 @@ fn main() {
         radius: 0.5,
     };
 
-    world.add(Box::new(sphere1));
-    world.add(Box::new(sphere2));
+    world.add(sphere1);
+    world.add(sphere2);
 
     let cam = CameraBuilder::new()
         .aspect_ratio(16.0 / 9.0)
