@@ -4,9 +4,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "open image.ppm",
+            "label": "open output.png",
             "type": "shell",
-            "command": "open ${workspaceFolder}/image.ppm",
+            "command": "open ${workspaceFolder}/output.png",
             "presentation": {
                 "reveal": "silent",
                 "close": true

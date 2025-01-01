@@ -11,7 +11,7 @@
             "cargo": {
                 "args": ["build", "--manifest-path", "${fileDirname}/../Cargo.toml"]
             },
-            "postDebugTask": "open image.ppm",
+            "postDebugTask": "open output.png",
             "presentation": {
                 "reveal": "silent",
                 "close": true
