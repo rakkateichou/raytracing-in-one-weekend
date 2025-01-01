@@ -8,15 +8,13 @@ mod sphere;
 mod util;
 mod vec3;
 
-use std::{fs::File, io::Write};
-
-use camera::{Camera, CameraBuilder};
+use camera::CameraBuilder;
 use hittable_list::HittableList;
 use ray::{Point3, Ray};
 use sphere::Sphere;
 use vec3::Vec3;
 
-fn main() -> std::io::Result<()> {
+fn main() {
     let mut world = HittableList::default();
 
     let sphere1 = Sphere {
@@ -44,10 +42,8 @@ fn main() -> std::io::Result<()> {
         .image_width(400)
         .max_depth(50)
         .build();
-    let render_result = cam.render(&world);
 
-    let mut file = File::create("image.ppm")?;
-    file.write_all(render_result.as_bytes())?;
-
-    Ok(())
+    cam.render(&world)
+        .save("output.png")
+        .expect("Failed to save image");
 }

@@ -1,5 +1,5 @@
 use crate::interval::Interval;
-use crate::{Vec3, Point3};
+use crate::Point3;
 use crate::Ray;
 use crate::hittable::{HitRecord, Hittable};
 

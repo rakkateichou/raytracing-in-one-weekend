@@ -7,10 +7,13 @@ use crate::{
     util::random_f64,
 };
 
+use image::{RgbImage, ImageBuffer, Rgb};
+use indicatif::ProgressBar;
+
 pub struct Camera {
     pub aspect_ratio: f64,
-    pub image_width: i32,
-    pub image_height: i32,
+    pub image_width: u32,
+    pub image_height: u32,
     pub center: Point3,
     pub max_depth: i32,
 
@@ -27,35 +30,49 @@ impl Camera {
         self.pixel_samples_scale = 1.0 / spp as f64;
     }
 
-    pub fn render(&self, world: &dyn Hittable) -> String {
-        let mut result = format!("P3\n{} {}\n255\n", self.image_width, self.image_height);
+    pub fn render(&self, world: &dyn Hittable) -> RgbImage {
+        let mut buffer: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
 
-        for j in 0..self.image_height {
-            eprint!("\rScanlines remaining: {} ", self.image_height - j);
-            for i in 0..self.image_width {
-                let mut color = Color::new(0.0, 0.0, 0.0);
-                for sample in 0..self.samples_per_pixel {
-                    let r = self.get_ray(i, j);
-                    color += Self::ray_color(&r, self.max_depth, world);
-                }
-                let mid_result = color * self.pixel_samples_scale;
-                result.push_str(&color::color_string(mid_result));
+        let pixel_count = self.image_width * self.image_height;
+        let pb = ProgressBar::new(pixel_count as u64);
+
+        for (x, y, pixel) in buffer.enumerate_pixels_mut() {
+            let mut color = Color::new(0.0, 0.0, 0.0);
+            for _ in 0..self.samples_per_pixel {
+                let r = self.get_ray(x as i32, y as i32);
+                color += Self::ray_color(&r, self.max_depth, world);
             }
+            let result_color = color * self.pixel_samples_scale;
+            *pixel = Rgb(color::color_rgb(result_color));
+            pb.inc(1);
         }
 
-        eprint!("\rDone.                      \n");
-        result
+        //for j in 0..self.image_height {
+        //    eprint!("\rScanlines remaining: {} ", self.image_height - j);
+        //    for i in 0..self.image_width {
+        //        let mut color = Color::new(0.0, 0.0, 0.0);
+        //        for sample in 0..self.samples_per_pixel {
+        //            let r = self.get_ray(i, j);
+        //            color += Self::ray_color(&r, self.max_depth, world);
+        //        }
+        //        let mid_result = color * self.pixel_samples_scale;
+        //        result.push_str(&color::color_string(mid_result));
+        //    }
+        //}
+
+        eprint!("Done\n");
+        buffer
     }
 
     fn ray_color(ray: &Ray, depth: i32, world: &dyn Hittable) -> Color {
-        if (depth <= 0) {
+        if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
 
         let mut rec = HitRecord::new();
         if world.hit(&ray, &Interval::new(0.001, std::f64::INFINITY), &mut rec) {
             let direction = Vec3::random_on_hemisphere(&rec.normal);
-            return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.5
+            return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.5;
         }
 
         let unit_direction = ray.direction.unit_vector();
@@ -88,7 +105,7 @@ impl Camera {
 #[derive(Debug)]
 pub struct CameraBuilder {
     aspect_ratio: f64,
-    image_width: i32,
+    image_width: u32,
     center: Point3,
     max_depth: i32,
     samples_per_pixel: i32,
@@ -111,7 +128,7 @@ impl CameraBuilder {
         }
     }
 
-    pub fn image_width(mut self, image_width: i32) -> Self {
+    pub fn image_width(mut self, image_width: u32) -> Self {
         self.image_width = image_width;
         self
     }
@@ -146,8 +163,7 @@ impl CameraBuilder {
             samples_per_pixel,
         } = self;
 
-        let mut image_height = (image_width as f64 / aspect_ratio) as i32;
-        image_height = if image_height < 1 { 1 } else { image_height };
+        let image_height = ((image_width as f64 / aspect_ratio) as u32).max(1);
 
         let focal_length = 1.0;
         let viewport_height = 2.0;

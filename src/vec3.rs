@@ -39,7 +39,7 @@ impl Vec3 {
         loop {
             let p = Vec3::random_interval(-1.0, 1.0);
             let lensq = p.length_squared();
-            if (1e-160 < lensq && lensq <= 1.0) {
+            if 1e-160 < lensq && lensq <= 1.0 {
                 return p / lensq.sqrt();
             };
         }
@@ -48,7 +48,7 @@ impl Vec3 {
     #[inline]
     pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
         let on_unit_sphere = Self::random_unit_vector();
-        if (on_unit_sphere.dot(normal) > 0.0) {
+        if on_unit_sphere.dot(normal) > 0.0 {
             return on_unit_sphere;
         } else {
             return -on_unit_sphere;
