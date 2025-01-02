@@ -39,8 +39,8 @@ fn main() {
 
     let cam = CameraBuilder::new()
         .aspect_ratio(16.0 / 9.0)
-        .image_width(400)
-        .max_depth(50)
+        .image_width(600)
+        .max_depth(100)
         .build();
 
     cam.render(&world)
