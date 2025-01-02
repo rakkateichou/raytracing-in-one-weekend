@@ -16,6 +16,7 @@ pub struct Camera {
     pub image_height: u32,
     pub center: Point3,
     pub max_depth: i32,
+    pub sky_color: Color,
 
     samples_per_pixel: i32,
     pixel00_loc: Point3,
@@ -40,7 +41,7 @@ impl Camera {
             let mut color = Color::new(0.0, 0.0, 0.0);
             for _ in 0..self.samples_per_pixel {
                 let r = self.get_ray(x as i32, y as i32);
-                color += Self::ray_color(&r, self.max_depth, world);
+                color += self.ray_color(&r, self.max_depth, world);
             }
             let result_color = color * self.pixel_samples_scale;
             *pixel = Rgb(color::color_rgb(result_color));
@@ -64,7 +65,9 @@ impl Camera {
         buffer
     }
 
-    fn ray_color(ray: &Ray, depth: i32, world: &dyn Hittable) -> Color {
+    fn ray_color(&self, ray: &Ray, depth: i32, world: &dyn Hittable) -> Color {
+        let sky_color = self.sky_color;
+
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
@@ -73,12 +76,12 @@ impl Camera {
         if world.hit(&ray, &Interval::new(0.001, std::f64::INFINITY), &mut rec) {
             // let direction = Vec3::random_on_hemisphere(&rec.normal);
             let direction = rec.normal + Vec3::random_unit_vector();
-            return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.5;
+            return self.ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.5;
         }
 
         let unit_direction = ray.direction.unit_vector();
         let a = 0.5 * (unit_direction.y + 1.0);
-        let color = Vec3::new(1.0, 1.0, 1.0) * (1.0 - a) + Vec3::new(0.5, 0.7, 1.0) * a;
+        let color = Vec3::new(1.0, 1.0, 1.0) * (1.0 - a) + sky_color * a;
         color
     }
 
@@ -110,6 +113,7 @@ pub struct CameraBuilder {
     center: Point3,
     max_depth: i32,
     samples_per_pixel: i32,
+    sky_color: Color
 }
 
 impl CameraBuilder {
@@ -119,6 +123,7 @@ impl CameraBuilder {
         let center = Vec3::new(0.0, 0.0, 0.0);
         let max_depth = 10;
         let samples_per_pixel = 10;
+        let sky_color = Color::new(0.5, 0.7, 1.0);
 
         Self {
             aspect_ratio,
@@ -126,6 +131,7 @@ impl CameraBuilder {
             center,
             max_depth,
             samples_per_pixel,
+            sky_color
         }
     }
 
@@ -154,6 +160,11 @@ impl CameraBuilder {
         self
     }
 
+    pub fn sky_color(mut self, sky_color: Color) -> Self {
+        self.sky_color = sky_color;
+        self
+    }
+
     pub fn build(self) -> Camera {
 
         let CameraBuilder {
@@ -162,6 +173,7 @@ impl CameraBuilder {
             center,
             max_depth,
             samples_per_pixel,
+            sky_color
         } = self;
 
         let image_height = ((image_width as f64 / aspect_ratio) as u32).max(1);
@@ -188,6 +200,7 @@ impl CameraBuilder {
             image_height,
             center,
             max_depth,
+            sky_color,
             samples_per_pixel,
             pixel00_loc,
             pixel_delta_u,

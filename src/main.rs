@@ -9,6 +9,7 @@ mod util;
 mod vec3;
 
 use camera::CameraBuilder;
+use color::Color;
 use hittable_list::HittableList;
 use ray::{Point3, Ray};
 use sphere::Sphere;
@@ -38,6 +39,7 @@ fn main() {
     world.add(sphere2);
 
     let cam = CameraBuilder::new()
+        // .sky_color(Color::new(1.0, 0.4, 0.5))
         .aspect_ratio(16.0 / 9.0)
         .image_width(600)
         .max_depth(100)
