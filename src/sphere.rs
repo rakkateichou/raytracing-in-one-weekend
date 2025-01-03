@@ -1,15 +1,19 @@
+use std::rc::Rc;
+
+use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
+use crate::material::Material;
 use crate::Point3;
 use crate::Ray;
-use crate::hittable::{HitRecord, Hittable};
 
 pub struct Sphere {
     pub center: Point3,
-    pub radius: f64
+    pub radius: f64,
+    pub mat: Box<dyn Material>,
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         let oc = self.center - ray.origin;
         let a = ray.direction.length_squared();
         let h = ray.direction.dot(&oc);
@@ -17,7 +21,7 @@ impl Hittable for Sphere {
 
         let discriminant = h * h - a * c;
         if discriminant < 0.0 {
-            return false;
+            return None;
         }
 
         let sqrtd = discriminant.sqrt();
@@ -27,15 +31,18 @@ impl Hittable for Sphere {
         if !ray_t.surrounds(root) {
             root = (h + sqrtd) / a;
             if !ray_t.surrounds(root) {
-                return false;
+                return None;
             }
         }
+
+        let mut rec = HitRecord::new();
 
         rec.t = root;
         rec.p = ray.at(rec.t);
         let outward_normal = (rec.p - self.center) / self.radius;
         rec.set_face_normal(ray, &outward_normal);
+        rec.mat = self.mat.clone();
 
-        return true;
+        Some(rec)
     }
 }

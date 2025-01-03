@@ -3,11 +3,11 @@ use crate::{
     hittable::{HitRecord, Hittable},
     interval::Interval,
     ray::{Point3, Ray},
-    vec3::Vec3,
     util::random_f64,
+    vec3::Vec3,
 };
 
-use image::{RgbImage, ImageBuffer, Rgb};
+use image::{ImageBuffer, Rgb, RgbImage};
 use indicatif::ProgressBar;
 
 pub struct Camera {
@@ -66,35 +66,37 @@ impl Camera {
     }
 
     fn ray_color(&self, ray: &Ray, depth: i32, world: &dyn Hittable) -> Color {
-        let sky_color = self.sky_color;
-
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
 
-        let mut rec = HitRecord::new();
-        if world.hit(&ray, &Interval::new(0.001, std::f64::INFINITY), &mut rec) {
-            // let direction = Vec3::random_on_hemisphere(&rec.normal);
-            let direction = rec.normal + Vec3::random_unit_vector();
-            return self.ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.5;
+        match world.hit(&ray, &Interval::new(0.001, std::f64::INFINITY)) {
+            Some(hit) => {
+                if let Some((scattered, attenuation)) = hit.mat.scatter(ray, &hit) {
+                    attenuation * self.ray_color(&scattered, depth - 1, world)
+                } else {
+                    Color::default()
+                }
+            }
+            None => {
+                let unit_direction = ray.direction.unit_vector();
+                let a = 0.5 * (unit_direction.y + 1.0);
+                let color = Vec3::new(1.0, 1.0, 1.0) * (1.0 - a) + self.sky_color * a;
+                color
+            }
         }
-
-        let unit_direction = ray.direction.unit_vector();
-        let a = 0.5 * (unit_direction.y + 1.0);
-        let color = Vec3::new(1.0, 1.0, 1.0) * (1.0 - a) + sky_color * a;
-        color
     }
 
     fn get_ray(&self, i: i32, j: i32) -> Ray {
         let offset = Self::sample_square();
         let pixel_sample = self.pixel00_loc
-                    + (self.pixel_delta_u * (i as f64 + offset.x))
-                    + (self.pixel_delta_v * (j as f64 + offset.y));
-                
+            + (self.pixel_delta_u * (i as f64 + offset.x))
+            + (self.pixel_delta_v * (j as f64 + offset.y));
+
         // if i == 0 && j == 0 {
         //     println!("{:?}", pixel_sample);
         // }
-        
+
         let ray_origin = self.center;
         let ray_direction = pixel_sample - ray_origin;
 
@@ -113,7 +115,7 @@ pub struct CameraBuilder {
     center: Point3,
     max_depth: i32,
     samples_per_pixel: i32,
-    sky_color: Color
+    sky_color: Color,
 }
 
 impl CameraBuilder {
@@ -131,7 +133,7 @@ impl CameraBuilder {
             center,
             max_depth,
             samples_per_pixel,
-            sky_color
+            sky_color,
         }
     }
 
@@ -166,14 +168,13 @@ impl CameraBuilder {
     }
 
     pub fn build(self) -> Camera {
-
         let CameraBuilder {
             aspect_ratio,
             image_width,
             center,
             max_depth,
             samples_per_pixel,
-            sky_color
+            sky_color,
         } = self;
 
         let image_height = ((image_width as f64 / aspect_ratio) as u32).max(1);
@@ -208,4 +209,4 @@ impl CameraBuilder {
             pixel_samples_scale,
         }
     }
-}   
+}

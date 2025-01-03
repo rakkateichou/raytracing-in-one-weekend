@@ -1,13 +1,17 @@
+use std::rc::Rc;
+
 use crate::interval::Interval;
+use crate::material::{Lambertian, Material};
 use crate::{Vec3, Point3};
 use crate::Ray;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
     pub t: f64,
-    pub front_face: bool
+    pub front_face: bool,
+    pub mat: Box<dyn Material>
 }
 
 impl HitRecord {
@@ -16,7 +20,8 @@ impl HitRecord {
             p: Point3::new(0.0, 0.0, 0.0),
             normal: Vec3::new(0.0, 0.0, 0.0),
             t: 0.0,
-            front_face: false
+            front_face: false,
+            mat: Box::new(Lambertian::default())
         }
     }
 
@@ -27,5 +32,5 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool;
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord>;
 }

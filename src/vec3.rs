@@ -1,6 +1,6 @@
-use std::ops::{Add, AddAssign, Div, Index, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Neg, Sub};
 
-use crate::util::{random_f64, random_f64_interval};
+use crate::{color::Color, util::{random_f64, random_f64_interval}};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Vec3 {
@@ -68,11 +68,22 @@ impl Vec3 {
             random_f64_interval(min, max),
         )
     }
+
+    #[inline]
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        self[0].abs() < s && self[1].abs() < s && self[2].abs() < s
+    }
+
+    #[inline]
+    pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+        *v - *n * v.dot(n) * 2.0
+    }
 }
 
 impl From<[f64; 3]> for Vec3 {
     fn from(item: [f64; 3]) -> Self {
-        Vec3 {
+        Self {
             x: item[0],
             y: item[1],
             z: item[2],
@@ -204,6 +215,17 @@ impl Index<usize> for Vec3 {
             0 => &self.x,
             1 => &self.y,
             2 => &self.z,
+            _ => panic!("Index out of bounds"),
+        }
+    }
+}
+
+impl IndexMut<usize> for Vec3 {
+    fn index_mut(&mut self, index: usize) -> &mut f64 {
+        match index {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            2 => &mut self.z,
             _ => panic!("Index out of bounds"),
         }
     }
