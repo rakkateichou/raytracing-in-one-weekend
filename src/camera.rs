@@ -26,11 +26,6 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn set_samples_per_pixel(&mut self, spp: i32) {
-        self.samples_per_pixel = spp;
-        self.pixel_samples_scale = 1.0 / spp as f64;
-    }
-
     pub fn render(&self, world: &dyn Hittable) -> RgbImage {
         let mut buffer: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
 
