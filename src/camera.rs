@@ -1,6 +1,6 @@
 use crate::{
     color::{self, Color},
-    hittable::{HitRecord, Hittable},
+    hittable::Hittable,
     interval::Interval,
     ray::{Point3, Ray},
     util::random_f64,

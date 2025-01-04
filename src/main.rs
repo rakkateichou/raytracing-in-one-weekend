@@ -3,16 +3,16 @@ mod color;
 mod hittable;
 mod hittable_list;
 mod interval;
+mod material;
 mod ray;
 mod sphere;
 mod util;
 mod vec3;
-mod material;
 
 use camera::CameraBuilder;
 use color::Color;
 use hittable_list::HittableList;
-use material::{Lambertian, Metal};
+use material::{Dielectric, Lambertian, Metal};
 use ray::{Point3, Ray};
 use sphere::Sphere;
 use vec3::Vec3;
@@ -21,18 +21,20 @@ fn main() {
     let mut world = HittableList::default();
 
     let material_ground = Box::new(Lambertian {
-        albedo: Color::new(0.8, 0.8, 0.0)
+        albedo: Color::new(0.8, 0.8, 0.0),
     });
     let material_center = Box::new(Lambertian {
-        albedo: Color::new(0.1, 0.2, 0.5)
+        albedo: Color::new(0.1, 0.2, 0.5),
     });
-    let material_left = Box::new(Metal {
-        albedo: Color::new(0.8, 0.8, 0.8),
-        fuzz: 0.4
+    let material_left = Box::new(Dielectric {
+        refraction_index: 1.50
+    });
+    let material_bubble = Box::new(Dielectric {
+        refraction_index: 1.0 / 1.50
     });
     let material_right = Box::new(Metal {
         albedo: Color::new(0.8, 0.6, 0.2),
-        fuzz: 0.0
+        fuzz: 0.0,
     });
 
     let sphere_ground = Sphere {
@@ -42,7 +44,7 @@ fn main() {
             z: -1.0,
         },
         radius: 100.0,
-        mat: material_ground
+        mat: material_ground,
     };
     let sphere_left = Sphere {
         center: Point3 {
@@ -51,7 +53,16 @@ fn main() {
             z: -1.0,
         },
         radius: 0.5,
-        mat: material_left 
+        mat: material_left,
+    };
+    let sphere_bubble = Sphere {
+        center: Point3 {
+            x: -1.0,
+            y: 0.0,
+            z: -1.0,
+        },
+        radius: 0.4,
+        mat: material_bubble,
     };
     let sphere_center = Sphere {
         center: Point3 {
@@ -60,7 +71,7 @@ fn main() {
             z: -1.2,
         },
         radius: 0.5,
-        mat: material_center
+        mat: material_center,
     };
     let sphere_right = Sphere {
         center: Point3 {
@@ -69,11 +80,12 @@ fn main() {
             z: -1.0,
         },
         radius: 0.5,
-        mat: material_right
+        mat: material_right,
     };
 
     world.add(sphere_ground);
     world.add(sphere_left);
+    world.add(sphere_bubble);
     world.add(sphere_center);
     world.add(sphere_right);
 

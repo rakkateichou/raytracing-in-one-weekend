@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::material::Material;

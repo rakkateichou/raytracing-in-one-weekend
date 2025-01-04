@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::interval::Interval;
 use crate::material::{Lambertian, Material};
 use crate::{Vec3, Point3};
